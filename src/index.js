@@ -4,41 +4,20 @@ import 'dotenv/config'
 import cors from 'cors';
 import uuidv4 from 'uuid/v4';
 import bodyParser from  'body-parser';
-import { parentPort } from 'worker_threads';
+import models from './models';
 
 console.log(process.env.MY_SECRET);
-
-let users = {
-    1: {
-      id: '1',
-      username: 'Robin Wieruch',
-    },
-    2: {
-      id: '2',
-      username: 'Dave Davids',
-    },
-  };
-  
-  let messages = {
-    1: {
-      id: '1',
-      text: 'Hello World',
-      userId: '1',
-    },
-    2: {
-      id: '2',
-      text: 'By World',
-      userId: '2',
-    },
-  };
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use((req,res)=>{
-    req.me = users[1];
+app.use((req, res, next) => {
+    req.context = {
+      models,
+      me: models.users[1],
+    };
     next();
-});
+  });
 
 app.get('/users', (req, res) => {
     console.log('req-res',req, res);
@@ -53,15 +32,28 @@ app.post('/message', (req, res) => {
         usserId: req.me.id
       };
     
-      messages[id] = message;
+    messages[id] = message;
     console.log('req-res',messages);
     return res.send(message);
 }
 );
 
-app.delete('users/:userId', (req, res) => {
-    console.log('req-res',req, res);
-    return res.send(`welcome to req-res${req}, ${res}`)
+app.get('/session', (req, res) => {
+    return res.send(req.context.models.users[req.context.me.id]);
+});
+
+app.get('/messages', (req, res) => {
+    return res.send(Object.values(messages));
+  })
+
+app.delete('/messages/:msgId', (req, res) => {
+    console.log('req_params____',messages);
+
+    const { [req.params.msgId]: message, ...otherMessages   } = messages;
+    console.log('____otherMessages____',otherMessages,[req.params.msgId],message);
+
+    messages = otherMessages;
+    return res.json({message, messages});
 }
 );
 
