@@ -1,66 +1,63 @@
 
 import express from 'express';
-import 'dotenv/config'
+import 'dotenv/config';
 import cors from 'cors';
-import uuidv4 from 'uuid/v4';
 import bodyParser from  'body-parser';
 import models from './models';
+import routes from './routes';
 
 console.log(process.env.MY_SECRET);
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use((req, res, next) => {
+app.use('/session', routes.session);
+app.use('/users', routes.user);
+app.use('/messages', routes.message);
+app.use((req, res, next)=>{
     req.context = {
-      models,
-      me: models.users[1],
+         me: models.users[1],
+         models
     };
     next();
-  });
-
-app.get('/users', (req, res) => {
-    console.log('req-res',req, res);
-    return res.send(Object.values(users));
-}
-);
-
-app.post('/message', (req, res) => {
-    const id  =   uuidv4();
-    const message = {
-        id,
-        usserId: req.me.id
-      };
-    
-    messages[id] = message;
-    console.log('req-res',messages);
-    return res.send(message);
-}
-);
-
-app.get('/session', (req, res) => {
-    return res.send(req.context.models.users[req.context.me.id]);
 });
 
-app.get('/messages', (req, res) => {
-    return res.send(Object.values(messages));
-  })
+// app.get('/session', (req, res) => {
+//     return res.send(req.context.models.users[req.context.me.id]);
+// });
 
-app.delete('/messages/:msgId', (req, res) => {
-    console.log('req_params____',messages);
+// app.get('/users', (req, res) => {
+//     console.log('req-res',req, res);
+//     return res.send(Object.values(req.context.models.users));
+// });
 
-    const { [req.params.msgId]: message, ...otherMessages   } = messages;
-    console.log('____otherMessages____',otherMessages,[req.params.msgId],message);
+// app.get('/users/:userId', (req, res) => {
+//     console.log('req-res',req, res);
+//     const userId = req.params.userId;
+//     return res.send(Object.values(req.context.models.users[userId]));
+// });
 
-    messages = otherMessages;
-    return res.json({message, messages});
-}
-);
+// app.post('/messages', (req, res) => {
+//     const id  =   uuidv4();
+//     const message = {
+//         id,
+//         text: req.body.text,
+//         userId: req.context.me.id,
+//       };
+//     req.context.models.messages[id] = message;
+//     return res.send(message);
+// });
 
-app.put('/users/:userId', (req, res) => {
-    console.log('req-res',req, res);
-    return res.send(`welcome to req-res${req}, ${res}`)
-}
-);
+// app.delete('/messages/:msgId', (req, res) => {
+//     const { [req.params.msgId]: message, ...otherMessage  } = req.context.models.messages;
+//     console.log('____otherMessages____',otherMessage,[req.params.msgId],message);
+//     req.context.models.messages = otherMessage;
+//     return res.send(...otherMessage);
+// });
+// // app.put('/users/:userId', (req, res) => {
+// //     console.log('req-res',req, res);
+// //     return res.send(`welcome to req-res${req}, ${res}`)
+// // }
+// // );
 
 app.listen(9000,() => console.log('port listening at', process.env.MY_SECRET));
